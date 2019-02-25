@@ -50,16 +50,19 @@ CURRENT_PATH = os.path.dirname(
     os.path.realpath(__file__))
 
 #installed so files
-INSTALLED_SO_FILE = [{"makefile_path": os.path.join(CURRENT_PATH, "presenter/agent"),
-                       "engine_setting": "-lpresenteragent \\",
-                       "so_file" : os.path.join(CURRENT_PATH, "presenter/agent/out/libpresenteragent.so")},
-                      {"makefile_path": os.path.join(CURRENT_PATH, "utils/ascend_ezdvpp"),
+DEVICE_INSTALLED_SO_FILE = [{"makefile_path": os.path.join(CURRENT_PATH, "utils/ascend_ezdvpp"),
                        "engine_setting": "-lascend_ezdvpp \\",
                        "so_file" : os.path.join(CURRENT_PATH, "utils/ascend_ezdvpp/out/libascend_ezdvpp.so")},
                       {"makefile_path": os.path.join(CURRENT_PATH, "osd"),
                        "engine_setting": "-lascenddk_osd \\",
                        "so_file" : os.path.join(CURRENT_PATH, "osd/out/libascenddk_osd.so")}]
 
+HOST_INSTALLED_SO_FILE = [{"makefile_path": os.path.join(CURRENT_PATH, "presenter/agent"),
+                       "engine_setting": "-lpresenteragent \\",
+                       "so_file" : os.path.join(CURRENT_PATH, "presenter/agent/out/libpresenteragent.so")}]
+
+MODE_ASIC = "ASIC"
+MODE_ALTAS_DK = "Altas DK"
 
 def execute(cmd, timeout=3600, cwd=None):
     '''execute os command'''
@@ -107,6 +110,28 @@ def execute(cmd, timeout=3600, cwd=None):
 
     return True, std_output_lines_last
 
+def read_ddk_info(ddk_info_path):
+    try:
+        ddk_info_file = open(
+            ddk_info_path, 'r', encoding='utf-8')
+        ddk_info_dict = json.load(
+            ddk_info_file, object_pairs_hook=OrderedDict)
+        
+        if "TARGET" in ddk_info_dict:
+            mode = ddk_info_dict.get("TARGET")
+        else:
+            mode = MODE_ALTAS_DK
+            
+        
+        return True, mode
+    except OSError as reason:
+        print("read ddk_info file failed")
+        exit(-1)
+    finally:
+        if ddk_info_file in locals():
+            ddk_info_file.close()
+
+    return False, ""
 
 def scp_file_to_remote(user, ip, port, password, local_file, remote_file):
     '''do scp file to remote node'''
@@ -197,8 +222,24 @@ def add_engine_setting(settings):
 
 def main():
     '''main function: install common so files'''
+    ddk_engine_config_path = os.path.join(
+        os.getenv("DDK_HOME"), "conf/settings_engine.conf")
+    if not os.path.exists(ddk_engine_config_path):
+        print("Can not find setings_engine.conf, please check DDK installation.")
+        exit(-1)
+    
+    ddk_info_path = os.path.join(
+        os.getenv("DDK_HOME"), "ddk_info")
+    if not os.path.exists(ddk_info_path):
+        print("Can not find ddk_info, please check DDK installation.")
+        exit(-1)
+    
+    ret, mode = read_ddk_info(ddk_info_path)
+    if not ret:
+        exit(-1)
+
     while(True):
-        altasdk_ip = input("Please input Altas DK Development Board IP:")
+        altasdk_ip = input("Please input %s Device IP:" % mode)
 
         if re.match(r"^(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$", altasdk_ip):
             break
@@ -206,28 +247,23 @@ def main():
             print("Input IP: %s is invalid!" % altasdk_ip)
 
     altasdk_ssh_user = input(
-        "Please input Altas DK Development Board SSH user(default: HwHiAiUser):")
+        "Please input %s Device SSH user(default: HwHiAiUser):" % mode)
     if altasdk_ssh_user == "":
         altasdk_ssh_user = "HwHiAiUser"
 
     altasdk_ssh_pwd = getpass.getpass(
-        "Please input Altas DK Development Board SSH user password:")
+        "Please input %s Device SSH user password:" % mode)
 
-    altasdk_ssh_port = input("Please input Altas DK Development Board SSH port(default: 22):")
+    altasdk_ssh_port = input("Please input %s Device SSH port(default: 22):" % mode)
     if altasdk_ssh_port == "":
         altasdk_ssh_port = "22"
 
     if altasdk_ssh_user != "root":
         altasdk_root_pwd = getpass.getpass(
-            "Please input Altas DK Development Board root user password:")
-
+            "Please input %s Device root user password:" % mode)
+    
+    
     print("Common installation is beggining.")
-
-    ddk_engine_config_path = os.path.join(
-        os.getenv("DDK_HOME"), "conf/settings_engine.conf")
-    if not os.path.exists(ddk_engine_config_path):
-        print("Can not find setings_engine.conf, please check DDK installation.")
-        exit(-1)
 
     engine_settings = []
 
@@ -245,7 +281,21 @@ def main():
         print("Mkdir dir in %s failed, please check your env and input." % altasdk_ip)
         exit(-1)
 
-    for each_so_file_dict in INSTALLED_SO_FILE:
+    device_so_files = []
+    device_so_files.extend(DEVICE_INSTALLED_SO_FILE)
+    if mode == MODE_ASIC:
+        for each_so_file_dict in HOST_INSTALLED_SO_FILE:
+            makefile_path = each_so_file_dict.get("makefile_path")
+            engine_settings.append(each_so_file_dict.get("engine_setting"))
+            so_file = each_so_file_dict.get("so_file")
+    
+            execute("make clean -C {path}".format(path=makefile_path))
+    
+            execute("make install mode={mode} -C {path}".format(mode=mode, path=makefile_path))
+    else:
+        device_so_files.extend(HOST_INSTALLED_SO_FILE)
+
+    for each_so_file_dict in device_so_files:
         makefile_path = each_so_file_dict.get("makefile_path")
         engine_settings.append(each_so_file_dict.get("engine_setting"))
         so_file = each_so_file_dict.get("so_file")

@@ -1,7 +1,7 @@
 TOPDIR      := $(patsubst %,%,$(CURDIR))
 
 ifndef DDK_HOME
-DDK_HOME := /root/tools/che/ddk/ddk
+$(error "Can not find DDK_HOME env, please set it in environment!.")
 endif
 
 LOCAL_MODULE_NAME := libascend_ezdvpp.so
