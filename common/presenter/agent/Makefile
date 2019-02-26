@@ -59,8 +59,6 @@ all: do_pre_build do_build
 
 do_pre_build:
 	$(Q)echo - do [$@]
-	$(Q)echo - "ssss"$(MODE)
-	$(Q)echo - "ddd"$(CC)
 	$(Q)mkdir -p $(OBJ_DIR)
 	$(Q)mkdir -p $(OUT_INC_DIR)
 

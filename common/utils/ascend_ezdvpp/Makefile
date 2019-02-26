@@ -12,22 +12,8 @@ endif
 
 ifeq ($(mode), AtlasDK)
 CC := aarch64-linux-gnu-g++
-LNK_FLAGS := \
-	-Wl,-rpath-link=$(DDK_HOME)/device/lib/ \
-	-L$(DDK_HOME)/device/lib/ \
-	-lhiai_common \
-	-lmedia_mini \
-	-lDvpp_api \
-	-shared
 else ifeq ($(mode), ASIC)
 CC := $(DDK_HOME)/toolchains/aarch64-linux-gcc6.3/bin/aarch64-linux-gnu-g++
-LNK_FLAGS := \
-	-Wl,-rpath-link=$(DDK_HOME)/host/lib/ \
-	-L$(DDK_HOME)/host/lib/ \
-	-lhiai_common \
-	-lmedia_mini \
-	-lDvpp_api \
-	-shared
 else
 $(error "Unsupported mode: "$(mode)", please input: AtlasDK or ASIC.")
 endif
@@ -49,6 +35,13 @@ INC_DIR = \
 	
 
 CC_FLAGS := $(INC_DIR) -std=c++11 -fPIC -Wall -O2
+LNK_FLAGS := \
+	-Wl,-rpath-link=$(DDK_HOME)/device/lib/ \
+	-L$(DDK_HOME)/device/lib/ \
+	-lhiai_common \
+	-lmedia_mini \
+	-lDvpp_api \
+	-shared
 
 SRCS := $(patsubst $(LOCAL_DIR)/%.cpp, %.cpp, $(shell find $(LOCAL_DIR) -name "*.cpp"))
 OBJS := $(addprefix $(OBJ_DIR)/, $(patsubst %.cpp, %.o,$(SRCS)))
