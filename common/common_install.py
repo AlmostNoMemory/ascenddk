@@ -62,7 +62,7 @@ HOST_INSTALLED_SO_FILE = [{"makefile_path": os.path.join(CURRENT_PATH, "presente
                        "so_file" : os.path.join(CURRENT_PATH, "presenter/agent/out/libpresenteragent.so")}]
 
 MODE_ASIC = "ASIC"
-MODE_ALTAS_DK = "Altas DK"
+MODE_ATLAS_DK = "Atlas DK"
 
 def execute(cmd, timeout=3600, cwd=None):
     '''execute os command'''
@@ -120,7 +120,7 @@ def read_ddk_info(ddk_info_path):
         if "TARGET" in ddk_info_dict:
             mode = ddk_info_dict.get("TARGET")
         else:
-            mode = MODE_ALTAS_DK
+            mode = MODE_ATLAS_DK
             
         
         return True, mode
@@ -289,7 +289,7 @@ def main():
         execute("make clean -C {path}".format(path=makefile_path))
 
         execute("make install mode={mode} -C {path}".format(mode=mode.replace(" ", ""), path=makefile_path))
-        if mode == MODE_ALTAS_DK:
+        if mode == MODE_ATLAS_DK:
             ret = scp_file_to_remote(developer_ssh_user, developer_ip, developer_ssh_port,
                                developer_ssh_pwd, so_file, "./{scp_lib}".format(scp_lib=now_time))
 
