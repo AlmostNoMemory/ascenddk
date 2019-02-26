@@ -39,7 +39,6 @@ LNK_FLAGS := \
 	-Wl,-rpath-link=$(DDK_HOME)/device/lib/ \
 	-L$(DDK_HOME)/device/lib/ \
 	-lhiai_common \
-	-lmedia_mini \
 	-lDvpp_api \
 	-shared
 
