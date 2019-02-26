@@ -142,11 +142,11 @@ def scp_file_to_remote(user, ip, port, password, local_file, remote_file):
         process = pexpect.spawn(cmd)
 
         ret = process.expect(
-            ["password", "Are you sure you want to continue connecting"])
+            ["[Pp]assword", "Are you sure you want to continue connecting"])
         if ret == 1:
             process.sendline("yes")
             print(process.before)
-            ret = process.expect("password")
+            ret = process.expect("[Pp]assword")
         if ret != 0:
             return False
 
@@ -168,10 +168,10 @@ def ssh_to_remote(user, ip, port, password, cmd_list):
     try:
         process = pexpect.spawn(cmd)
         ret = process.expect(
-            ["password", "Are you sure you want to continue connecting"])
+            ["[Pp]assword", "Are you sure you want to continue connecting"])
         if ret == 1:
             process.sendline("yes")
-            ret = process.expect("password")
+            ret = process.expect("[Pp]assword")
         if ret != 0:
             return False
 
@@ -239,27 +239,27 @@ def main():
         exit(-1)
 
     while(True):
-        altasdk_ip = input("Please input %s Device IP:" % mode)
+        developer_ip = input("Please input %s Device IP:" % mode)
 
-        if re.match(r"^(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$", altasdk_ip):
+        if re.match(r"^(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$", developer_ip):
             break
         else:
-            print("Input IP: %s is invalid!" % altasdk_ip)
+            print("Input IP: %s is invalid!" % developer_ip)
 
-    altasdk_ssh_user = input(
+    developer_ssh_user = input(
         "Please input %s Device SSH user(default: HwHiAiUser):" % mode)
-    if altasdk_ssh_user == "":
-        altasdk_ssh_user = "HwHiAiUser"
+    if developer_ssh_user == "":
+        developer_ssh_user = "HwHiAiUser"
 
-    altasdk_ssh_pwd = getpass.getpass(
+    developer_ssh_pwd = getpass.getpass(
         "Please input %s Device SSH user password:" % mode)
 
-    altasdk_ssh_port = input("Please input %s Device SSH port(default: 22):" % mode)
-    if altasdk_ssh_port == "":
-        altasdk_ssh_port = "22"
+    developer_ssh_port = input("Please input %s Device SSH port(default: 22):" % mode)
+    if developer_ssh_port == "":
+        developer_ssh_port = "22"
 
-    if altasdk_ssh_user != "root":
-        altasdk_root_pwd = getpass.getpass(
+    if developer_ssh_user != "root":
+        developer_root_pwd = getpass.getpass(
             "Please input %s Device root user password:" % mode)
     
     
@@ -271,51 +271,49 @@ def main():
 
     mkdir_expect = PROMPT
     mkdir_expect.append("File exists")
-    ret = ssh_to_remote(altasdk_ssh_user, altasdk_ip, altasdk_ssh_port,
-                  altasdk_ssh_pwd, [{"type": "cmd",
+    ret = ssh_to_remote(developer_ssh_user, developer_ip, developer_ssh_port,
+                  developer_ssh_pwd, [{"type": "cmd",
                                      "value": "mkdir ./{scp_lib}".format(scp_lib=now_time),
                                      "secure": False},
                                     {"type": "expect",
                                      "value": mkdir_expect}])
     if not ret:
-        print("Mkdir dir in %s failed, please check your env and input." % altasdk_ip)
+        print("Mkdir dir in %s failed, please check your env and input." % developer_ip)
         exit(-1)
 
-    device_so_files = []
-    device_so_files.extend(DEVICE_INSTALLED_SO_FILE)
-    if mode == MODE_ASIC:
-        for each_so_file_dict in HOST_INSTALLED_SO_FILE:
-            makefile_path = each_so_file_dict.get("makefile_path")
-            engine_settings.append(each_so_file_dict.get("engine_setting"))
-            so_file = each_so_file_dict.get("so_file")
-    
-            execute("make clean -C {path}".format(path=makefile_path))
-    
-            execute("make install mode={mode} -C {path}".format(mode=mode, path=makefile_path))
-    else:
-        device_so_files.extend(HOST_INSTALLED_SO_FILE)
-
-    for each_so_file_dict in device_so_files:
+    for each_so_file_dict in HOST_INSTALLED_SO_FILE:
         makefile_path = each_so_file_dict.get("makefile_path")
         engine_settings.append(each_so_file_dict.get("engine_setting"))
         so_file = each_so_file_dict.get("so_file")
 
         execute("make clean -C {path}".format(path=makefile_path))
 
-        execute("make install -C {path}".format(path=makefile_path))
+        execute("make install mode={mode} -C {path}".format(mode=mode.replace(" ", ""), path=makefile_path))
+        if mode == MODE_ALTAS_DK:
+            ret = scp_file_to_remote(developer_ssh_user, developer_ip, developer_ssh_port,
+                               developer_ssh_pwd, so_file, "./{scp_lib}".format(scp_lib=now_time))
 
-        ret = scp_file_to_remote(altasdk_ssh_user, altasdk_ip, altasdk_ssh_port,
-                           altasdk_ssh_pwd, so_file, "./{scp_lib}".format(scp_lib=now_time))
+    for each_so_file_dict in DEVICE_INSTALLED_SO_FILE:
+        makefile_path = each_so_file_dict.get("makefile_path")
+        engine_settings.append(each_so_file_dict.get("engine_setting"))
+        so_file = each_so_file_dict.get("so_file")
+
+        execute("make clean -C {path}".format(path=makefile_path))
+
+        execute("make install mode={mode} -C {path}".format(mode=mode.replace(" ", ""), path=makefile_path))
+
+        ret = scp_file_to_remote(developer_ssh_user, developer_ip, developer_ssh_port,
+                           developer_ssh_pwd, so_file, "./{scp_lib}".format(scp_lib=now_time))
         if not ret:
-            print("Scp so to %s is failed, please check your env and input." % altasdk_ip)
+            print("Scp so to %s is failed, please check your env and input." % developer_ip)
             exit(-1)
     cmd_list = []
-    if altasdk_ssh_user != "root":
+    if developer_ssh_user != "root":
         cmd_list.extend([{"type": "cmd",
                          "value": "su root",
                          "secure": False},
                          {"type": "cmd",
-                         "value": altasdk_root_pwd,
+                         "value": developer_root_pwd,
                          "secure": True},
                          {"type": "expect",
                           "value": PROMPT}])
@@ -344,8 +342,8 @@ def main():
                       "secure": False},
                      {"type": "expect",
                       "value": PROMPT}])
-    ret = ssh_to_remote(altasdk_ssh_user, altasdk_ip, altasdk_ssh_port,
-                  altasdk_ssh_pwd, cmd_list)
+    ret = ssh_to_remote(developer_ssh_user, developer_ip, developer_ssh_port,
+                  developer_ssh_pwd, cmd_list)
     if not ret:
         print("Installation is failed.")
         exit(-1)

@@ -2,7 +2,11 @@ ifndef DDK_HOME
 $(error "Can not find DDK_HOME env, please set it in environment!.")
 endif
 
-ifeq ($(mode), Atlas DK)
+ifeq ($(mode),)
+mode=AtlasDK
+endif
+
+ifeq ($(mode), AtlasDK)
 CC := aarch64-linux-gnu-g++
 LNK_FLAGS := \
 	-Wl,-rpath-link=$(DDK_HOME)/device/lib/ \
@@ -17,7 +21,7 @@ LNK_FLAGS := \
 	-lprotobuf \
 	-shared
 else
-$(error "Unsupported mode: "$(mode)", please input: Atlas DK or ASIC.")
+$(error "Unsupported mode: "$(mode)", please input: AtlasDK or ASIC.")
 endif
 
 
