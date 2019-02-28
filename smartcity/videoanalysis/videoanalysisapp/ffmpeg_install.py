@@ -46,7 +46,7 @@ import datetime
 #ssh expect prompt
 PROMPT = ['# ', '>>> ', '> ', '\$ ']
 
-FFMPEG_CONFIGURE_OPTIONS = " --extra-libs=-lgcc  --cc={cc} --ar={ar} --enable-cross-compile --target-os=linux --arch=aarch64 --enable-shared --enable-network --enable-protocol=tcp --enable-protocol=udp --enable-protocol=rtp --enable-demuxer=rtsp --disable-debug --disable-stripping --disable-doc --disable-ffplay --disable-ffprobe --disable-htmlpages --disable-manpages --disable-podpages  --disable-txtpages --disable-w32threads --disable-os2threads"
+FFMPEG_CONFIGURE_OPTIONS = " --cross-prefix={cross_prefix} --enable-cross-compile --target-os=linux --arch=aarch64 --enable-shared --enable-network --enable-protocol=tcp --enable-protocol=udp --enable-protocol=rtp --enable-demuxer=rtsp --disable-debug --disable-stripping --disable-doc --disable-ffplay --disable-ffprobe --disable-htmlpages --disable-manpages --disable-podpages  --disable-txtpages --disable-w32threads --disable-os2threads {sysroot} "
 
 FFMPEG_CONFIGURE_PREFIX = " --prefix="
 
@@ -140,11 +140,11 @@ def scp_file_to_remote(user, ip, port, password, local_file, remote_file):
         process = pexpect.spawn(cmd)
 
         ret = process.expect(
-            ["password", "Are you sure you want to continue connecting"])
+            ["[Pp]assword", "Are you sure you want to continue connecting"])
         if ret == 1:
             process.sendline("yes")
             print(process.before)
-            ret = process.expect("password")
+            ret = process.expect("[Pp]assword")
         if ret != 0:
             return False
 
@@ -166,10 +166,10 @@ def ssh_to_remote(user, ip, port, password, cmd_list):
     try:
         process = pexpect.spawn(cmd)
         ret = process.expect(
-            ["password", "Are you sure you want to continue connecting"])
+            ["[Pp]assword", "Are you sure you want to continue connecting"])
         if ret == 1:
             process.sendline("yes")
-            ret = process.expect("password")
+            ret = process.expect("[Pp]assword")
         if ret != 0:
             return False
 
@@ -304,13 +304,15 @@ def main():
         print("[INFO] FFmpeg installation is beginning, the process will takes several minutes, please wait a while.")
         
         if mode == MODE_ASIC:
-            cc_aarch_build_path = os.path.join(
-            os.getenv("DDK_HOME"), "uihost/toolchains/aarch64-linux-gcc6.3/bin/aarch64-linux-gnu-g++")
-            ar_aarch_build_path = os.path.join(
-            os.getenv("DDK_HOME"), "uihost/toolchains/aarch64-linux-gcc6.3/bin/aarch64-linux-gnu-ar")
-            ffmpeg_build_options = FFMPEG_CONFIGURE_OPTIONS.format(cc=cc_aarch_build_path,ar=ar_aarch_build_path)
-        else:
-            ffmpeg_build_options = FFMPEG_CONFIGURE_OPTIONS.format(cc="/usr/bin/aarch64-linux-gnu-gcc", ar="/usr/bin/aarch64-linux-gnu-ar")
+            cross_prefix = os.path.join(
+            os.getenv("DDK_HOME"), "uihost/toolchains/aarch64-linux-gcc6.3/bin/aarch64-linux-gnu-")
+            sysroot = "--sysroot=" + os.path.join(
+            os.getenv("DDK_HOME"), "uihost/toolchains/aarch64-linux-gcc6.3/sysroot")            
+        else:            
+            cross_prefix = "/usr/bin/aarch64-linux-gnu-"
+            sysroot = ""
+
+        ffmpeg_build_options = FFMPEG_CONFIGURE_OPTIONS.format(cross_prefix=cross_prefix, sysroot=sysroot)
         
         install_path = "{path}/install_path".format(path=code_path)        
         execute("mkdir -p {path}".format(path=install_path))
@@ -392,27 +394,26 @@ def main():
     
         # transmit ffmpeg packet to Atlas
         while(True):
-            altasdk_ip = input("[INFO] Please input %s Device IP:" % mode)
+            developer_ip = input("[INFO] Please input %s Device IP:" % mode)
 
-            if re.match(r"^(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$", altasdk_ip):
+            if re.match(r"^(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$", developer_ip):
                 break
             else:
-                print("[ERROR] The user input IP: %s is invalid!" % altasdk_ip)
-
-        altasdk_ssh_user = input(
+                print("[ERROR] The user input IP: %s is invalid!" % developer_ip)
+        developer_ssh_user = input(
             "[INFO] Please input %s Device SSH user(default: HwHiAiUser):" % mode)
-        if altasdk_ssh_user == "":
-            altasdk_ssh_user = "HwHiAiUser"
+        if developer_ssh_user == "":
+            developer_ssh_user = "HwHiAiUser"
 
-        altasdk_ssh_pwd = getpass.getpass(
+        developer_ssh_pwd = getpass.getpass(
             "[INFO] Please input %s Device SSH user password:" % mode)
 
-        altasdk_ssh_port = input("[INFO] Please input %s Device SSH port(default: 22):" % mode)
-        if altasdk_ssh_port == "":
-            altasdk_ssh_port = "22"
+        developer_ssh_port = input("[INFO] Please input %s Device SSH port(default: 22):" % mode)
+        if developer_ssh_port == "":
+            developer_ssh_port = "22"
 
-        if altasdk_ssh_user != "root":
-            altasdk_root_pwd = getpass.getpass(
+        if developer_ssh_user != "root":
+            developer_root_pwd = getpass.getpass(
                 "[INFO] Please input %s Device root user password:" % mode)
 
         print("[INFO] Transmit ffmpeg package is beginning.")
@@ -421,31 +422,31 @@ def main():
         now_time = datetime.datetime.now().strftime('scp_lib_%Y%m%d%H%M%S')
         mkdir_expect = PROMPT
         mkdir_expect.append("File exists")
-        ret = ssh_to_remote(altasdk_ssh_user, altasdk_ip, altasdk_ssh_port,
-                      altasdk_ssh_pwd, [{"type": "cmd",
+        ret = ssh_to_remote(developer_ssh_user, developer_ip, developer_ssh_port,
+                      developer_ssh_pwd, [{"type": "cmd",
                                          "value": "mkdir ./{scp_lib}".format(scp_lib=now_time),
                                          "secure": False},
                                         {"type": "expect",
                                          "value": mkdir_expect}])
         if not ret:
-            print("[ERROR] Mkdir dir in %s failed, please check your env and input." % altasdk_ip)
+            print("[ERROR] Mkdir dir in %s failed, please check your env and input." % developer_ip)
             exit(-1)        
         
         # transmit FFmpeg package to Atlas
-        ret = scp_file_to_remote(altasdk_ssh_user, altasdk_ip, altasdk_ssh_port,
-                               altasdk_ssh_pwd, ffmpeg_pakage, "./{scp_lib}".format(scp_lib=now_time))
+        ret = scp_file_to_remote(developer_ssh_user, developer_ip, developer_ssh_port,
+                               developer_ssh_pwd, ffmpeg_pakage, "./{scp_lib}".format(scp_lib=now_time))
         if not ret:
-            print("[ERROR] Scp ffmpeg package to %s is failed, please check your env and input." % altasdk_ip)
+            print("[ERROR] Scp ffmpeg package to %s is failed, please check your env and input." % developer_ip)
             exit(-1)
             
         # decompress ffmpeg package on Atlas
         cmd_list = []
-        if altasdk_ssh_user != "root":
+        if developer_ssh_user != "root":
             cmd_list.extend([{"type":"cmd",
                               "value":"su root",
                               "secure":False},
                              {"type":"cmd",
-                              "value":altasdk_root_pwd,
+                              "value":developer_root_pwd,
                               "secure":True},
                              {"type":"expect",
                               "value":PROMPT}])
@@ -484,8 +485,8 @@ def main():
                          "secure": False},
                         {"type": "expect",
                          "value": PROMPT}])
-        ret = ssh_to_remote(altasdk_ssh_user, altasdk_ip, altasdk_ssh_port,
-                      altasdk_ssh_pwd, cmd_list)
+        ret = ssh_to_remote(developer_ssh_user, developer_ip, developer_ssh_port,
+                      developer_ssh_pwd, cmd_list)
         if not ret:
             print("[ERROR] Installation ffmpeg on Atlas is failed.")
             exit(-1)
