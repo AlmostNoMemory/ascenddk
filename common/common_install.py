@@ -278,7 +278,6 @@ def main():
 
     host_engine_settings = []
     device_engine_settings = []
-    
     now_time = datetime.datetime.now().strftime('scp_lib_%Y%m%d%H%M%S')
 
     mkdir_expect = PROMPT
