@@ -225,7 +225,8 @@ class VideoAnalysisServer(PresenterSocketServer):
             self.send_message(conn, response, msg_name)
             return False
 
-        if self.frame_num % CHECK_INTERCAL == 0:
+        frame_num = self.app_manager.get_frame_num(app_id, channel_id)
+        if frame_num % CHECK_INTERCAL == 0:
             if self._remain_space() <= self.reserved_space:
                 logging.error("Insufficient storage space on Server.")
                 response.ret = pb2.kErrorStorageLimit
@@ -233,7 +234,7 @@ class VideoAnalysisServer(PresenterSocketServer):
                 self.send_message(conn, response, msg_name)
                 return False
 
-        stack_index = self.frame_num // MAX_SUB_DIRECTORY_NUM
+        stack_index = frame_num // MAX_SUB_DIRECTORY_NUM
         stack_directory = "stack_{}/".format(stack_index)
         frame = stack_directory + frame_id
         frame_dir = os.path.join(self.storage_dir, app_id, channel_id, frame)
@@ -258,7 +259,8 @@ class VideoAnalysisServer(PresenterSocketServer):
                 logging.error("save image: %s error.", object_dir)
                 return False
 
-        self.frame_num += 1
+        self.app_manager.increase_frame_num(app_id, channel_id)
+
         self.app_manager.set_heartbeat(conn.fileno())
         response.ret = pb2.kErrorNone
         response.message = "image set process succeed"

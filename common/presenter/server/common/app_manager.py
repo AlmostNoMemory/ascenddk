@@ -50,6 +50,7 @@ class App():
         # set timeout 1 second
         conn.settimeout(1)
         self.socket = conn
+        self.frame_num_dict = {}
 
 class AppManager():
     '''A class provides app management features'''
@@ -181,6 +182,24 @@ class AppManager():
                 if self.app_list[i].socket_fd == sock_fileno:
                     self.app_list[i].heartbeat = time.time()
 
+    def increase_frame_num(self, app_id, channel_id):
+        with self.app_list_lock:
+            for i in range(len(self.app_list)):
+                if self.app_list[i].app_id == app_id:
+                    if channel_id in self.app_list[i].frame_num_dict:
+                        self.app_list[i].frame_num_dict[channel_id] += 1
+                    else:
+                        self.app_list[i].frame_num_dict[channel_id] = 1
+
+    def get_frame_num(self, app_id, channel_id):
+        with self.app_list_lock:
+            for i in range(len(self.app_list)):
+                if self.app_list[i].app_id == app_id:
+                    if channel_id in self.app_list[i].frame_num_dict:
+                        return self.app_list[i].frame_num_dict[channel_id]
+                    else:
+                        return 0
+            return 0
     def list_app(self):
         """
         API for listing all apps
