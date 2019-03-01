@@ -55,9 +55,18 @@ DEVICE_INSTALLED_SO_FILE = [{"makefile_path": os.path.join(CURRENT_PATH, "utils/
                        "so_file" : os.path.join(CURRENT_PATH, "utils/ascend_ezdvpp/out/libascend_ezdvpp.so")},
                       {"makefile_path": os.path.join(CURRENT_PATH, "osd"),
                        "engine_setting": "-lascenddk_osd \\",
-                       "so_file" : os.path.join(CURRENT_PATH, "osd/out/libascenddk_osd.so")}]
+                       "so_file" : os.path.join(CURRENT_PATH, "osd/out/libascenddk_osd.so")},
+                      {"makefile_path": os.path.join(CURRENT_PATH, "presenter/agent"),
+                       "engine_setting": "-lpresenteragent \\",
+                       "so_file" : os.path.join(CURRENT_PATH, "presenter/agent/out/libpresenteragent.so")}]
 
-HOST_INSTALLED_SO_FILE = [{"makefile_path": os.path.join(CURRENT_PATH, "presenter/agent"),
+HOST_INSTALLED_SO_FILE = [{"makefile_path": os.path.join(CURRENT_PATH, "utils/ascend_ezdvpp"),
+                       "engine_setting": "-lascend_ezdvpp \\",
+                       "so_file" : os.path.join(CURRENT_PATH, "utils/ascend_ezdvpp/out/libascend_ezdvpp.so")},
+                      {"makefile_path": os.path.join(CURRENT_PATH, "osd"),
+                       "engine_setting": "-lascenddk_osd \\",
+                       "so_file" : os.path.join(CURRENT_PATH, "osd/out/libascenddk_osd.so")},
+                      {"makefile_path": os.path.join(CURRENT_PATH, "presenter/agent"),
                        "engine_setting": "-lpresenteragent \\",
                        "so_file" : os.path.join(CURRENT_PATH, "presenter/agent/out/libpresenteragent.so")}]
 
