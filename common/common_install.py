@@ -186,7 +186,6 @@ def add_engine_setting(settings):
         device_engine_include = engine_info.get("Device").get("includes").get("include")
         device_engine_link_dir = engine_info.get("Device").get("linkflags").get("linkdir")
 
-
         for each_new_setting in settings:
             if each_new_setting not in device_engine_link_obj:
                 device_engine_link_obj.insert(-1, each_new_setting)
