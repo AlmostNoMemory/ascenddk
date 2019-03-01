@@ -8,18 +8,8 @@ endif
 
 ifeq ($(mode), AtlasDK)
 CC := aarch64-linux-gnu-g++
-LNK_FLAGS := \
-	-Wl,-rpath-link=$(DDK_HOME)/device/lib/ \
-	-L$(DDK_HOME)/device/lib \
-	-lprotobuf \
-	-shared
 else ifeq ($(mode), ASIC)
 CC := g++
-LNK_FLAGS := \
-	-Wl,-rpath-link=$(DDK_HOME)/host/lib/ \
-	-L$(DDK_HOME)/host/lib \
-	-lprotobuf \
-	-shared
 else
 $(error "Unsupported mode: "$(mode)", please input: AtlasDK or ASIC.")
 endif
@@ -55,6 +45,12 @@ ALL_OBJS := $(OBJS) \
 
 CC_FLAGS := $(INC_DIR) -std=c++11 -Wall -fPIC -O2
 
+LNK_FLAGS := \
+	-Wl,-rpath-link=$(DDK_HOME)/host/lib/ \
+	-L$(DDK_HOME)/host/lib \
+	-lprotobuf \
+	-shared
+
 all: do_pre_build do_build
 
 do_pre_build:
@@ -84,9 +80,9 @@ $(PROTO_OBJS) : proto/presenter_message.pb.cc | do_pre_build
 install: all
 	$(Q)echo [INSTALL] $@
 	$(Q)mkdir -p $(HOME)/ascend_ddk/include
-	$(Q)mkdir -p $(HOME)/ascend_ddk/device/lib
+	$(Q)mkdir -p $(HOME)/ascend_ddk/host/lib
 	$(Q)cp -R $(OUT_INC_DIR)/* $(HOME)/ascend_ddk/include/
-	$(Q)cp -R $(OUT_DIR)/lib*.so $(HOME)/ascend_ddk/devic/lib/
+	$(Q)cp -R $(OUT_DIR)/lib*.so $(HOME)/ascend_ddk/host/lib/
 
 install pcie: 
 
