@@ -95,6 +95,7 @@ class ChannelHandler():
         self.media_type = media_type
         self.img_data = None
         self.thread = None
+        self._frame = None
         # last time the channel receive data.
         self.heartbeat = time.time()
         self.web_event = ThreadEvent(timeout=WEB_EVENT_TIMEOUT)
@@ -182,7 +183,7 @@ class ChannelHandler():
         # True: _web_event return because set()
         # False: _web_event return because timeout
         if ret:
-            return (self.img_data, self.fps, self.width, self.height)
+            return (self._frame, self.fps, self.width, self.height)
 
         return (None, None, None, None)
 
@@ -212,6 +213,7 @@ class ChannelHandler():
         for frame in self.frames():
             if frame:
                 # send signal to clients
+                self._frame = frame
                 self.web_event.set()
 
             # exit thread
