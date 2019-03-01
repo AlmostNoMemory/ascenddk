@@ -31,12 +31,14 @@ INC_DIR = \
 	-I$(DDK_HOME)/include/inc/custom \
 	-I$(DDK_HOME)/include/third_party/opencv/include \
 	-I$(DDK_HOME)/include/libc_sec/include \
+	-I$(HOME)/ascend_ddk/include \
 
 
 CC_FLAGS := $(INC_DIR) -std=c++11 -fPIC -Wall -O2
 LNK_FLAGS := \
 	-Wl,-rpath-link=$(DDK_HOME)/device/lib/ \
 	-L$(DDK_HOME)/device/lib/ \
+	-L$(HOME)/ascend_ddk/device/lib \
 	-lascend_ezdvpp \
 	-lopencv_world \
 	-shared
@@ -68,8 +70,10 @@ $(OBJS): $(OBJ_DIR)/%.o : %.cpp | do_pre_build
 
 install: all
 	$(Q)echo [INSTALL] $@
-	$(Q)cp -R $(OUT_INC_DIR)/* $(DDK_HOME)/include/inc/
-	$(Q)cp -R $(OUT_DIR)/lib*.so $(DDK_HOME)/device/lib/
+	$(Q)mkdir -p $(HOME)/ascend_ddk/include
+	$(Q)mkdir -p $(HOME)/ascend_ddk/device/lib
+	$(Q)cp -R $(OUT_INC_DIR)/* $(HOME)/ascend_ddk/include/
+	$(Q)cp -R $(OUT_DIR)/lib*.so $(HOME)/ascend_ddk/device/lib/
 
 clean:
 	rm -rf $(TOPDIR)/out

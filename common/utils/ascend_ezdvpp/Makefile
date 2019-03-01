@@ -69,8 +69,10 @@ $(OBJS): $(OBJ_DIR)/%.o : %.cpp | do_pre_build
 
 install: all
 	$(Q)echo [INSTALL] $@
-	$(Q)cp -R $(OUT_INC_DIR)/* $(DDK_HOME)/include/inc/
-	$(Q)cp -R $(OUT_DIR)/lib*.so $(DDK_HOME)/device/lib/
+	$(Q)mkdir -p $(HOME)/ascend_ddk/include
+	$(Q)mkdir -p $(HOME)/ascend_ddk/device/lib
+	$(Q)cp -R $(OUT_INC_DIR)/* $(HOME)/ascend_ddk/include/
+	$(Q)cp -R $(OUT_DIR)/lib*.so $(HOME)/ascend_ddk/device/lib/
 
 clean:
 	rm -rf $(TOPDIR)/out

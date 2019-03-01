@@ -83,12 +83,10 @@ $(PROTO_OBJS) : proto/presenter_message.pb.cc | do_pre_build
 
 install: all
 	$(Q)echo [INSTALL] $@
-	$(Q)cp -R $(OUT_INC_DIR)/* $(DDK_HOME)/include/inc/
-ifeq ($(mode), AtlasDK)
-	$(Q)cp -R $(OUT_DIR)/lib*.so $(DDK_HOME)/device/lib/
-else
-	$(Q)cp -R $(OUT_DIR)/lib*.so $(DDK_HOME)/host/lib/
-endif
+	$(Q)mkdir -p $(HOME)/ascend_ddk/include
+	$(Q)mkdir -p $(HOME)/ascend_ddk/host/lib
+	$(Q)cp -R $(OUT_INC_DIR)/* $(HOME)/ascend_ddk/include/
+	$(Q)cp -R $(OUT_DIR)/lib*.so $(HOME)/ascend_ddk/host/lib/
 
 install pcie: 
 

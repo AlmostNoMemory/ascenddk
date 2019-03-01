@@ -61,6 +61,11 @@ HOST_INSTALLED_SO_FILE = [{"makefile_path": os.path.join(CURRENT_PATH, "presente
                        "engine_setting": "-lpresenteragent \\",
                        "so_file" : os.path.join(CURRENT_PATH, "presenter/agent/out/libpresenteragent.so")}]
 
+
+ENGINE_INCLUDE = ["-I$(HOME)/ascend_ddk/include \\"]
+DEVICE_ENGINE_LINK_DIR = ["-L$(HOME)/ascend_ddk/device/lib "]
+HOST_ENGINE_LINK_DIR = ["-L$(HOME)/ascend_ddk/host/lib "]
+
 MODE_ASIC = "ASIC"
 MODE_ATLAS_DK = "Atlas DK"
 
@@ -210,14 +215,33 @@ def add_engine_setting(mode, host_engine_settings, device_engine_settings):
             "configuration").get("OI")
         
         host_engine_link_obj = engine_info.get("Host").get("linkflags").get("linkobj")
+        host_engine_include = engine_info.get("Host").get("includes").get("include")
+        host_engine_link_dir = engine_info.get("Host").get("linkflags").get("linkdir")
         device_engine_link_obj = engine_info.get("Device").get("linkflags").get("linkobj")
+        device_engine_include = engine_info.get("Device").get("includes").get("include")
+        device_engine_link_dir = engine_info.get("Device").get("linkflags").get("linkdir")
 
         for each_new_setting in host_engine_settings:
             if each_new_setting not in host_engine_link_obj:
                 host_engine_link_obj.insert(-1, each_new_setting)
+        for each_new_include in ENGINE_INCLUDE:
+            if each_new_include not in host_engine_include:
+                host_engine_include.append(each_new_include)
+        for each_new_linkdir in HOST_ENGINE_LINK_DIR:
+            if each_new_linkdir not in host_engine_link_dir:
+                host_engine_link_dir = each_new_linkdir + host_engine_link_dir
+        engine_info.get("Host").get("linkflags")["linkdir"] = host_engine_link_dir
+
         for each_new_setting in device_engine_settings:
             if each_new_setting not in device_engine_link_obj:
                 device_engine_link_obj.insert(-1, each_new_setting)
+        for each_new_include in ENGINE_INCLUDE:
+            if each_new_include not in device_engine_include:
+                device_engine_include.append(each_new_include)
+        for each_new_linkdir in DEVICE_ENGINE_LINK_DIR:
+            if each_new_linkdir not in device_engine_link_dir:
+                device_engine_link_dir = each_new_linkdir + device_engine_link_dir
+        engine_info.get("Device").get("linkflags")["linkdir"] = device_engine_link_dir
         ddk_engine_config_new_file = open(
             ddk_engine_config_path, 'w', encoding='utf-8')
         json.dump(ddk_engine_config_info, ddk_engine_config_new_file, indent=2)
