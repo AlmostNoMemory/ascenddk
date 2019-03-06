@@ -458,7 +458,7 @@
         function goto(){
             debugger;
            var num = videoapp.$data.frameNo;
-           if(parseInt(num) >= videoapp.$data.totalFrame || parseInt(num)<1){
+           if(parseInt(num) > videoapp.$data.totalFrame || parseInt(num)<1){
                return false;
            }
            var selectedChannel = $('#tree').treeview('getSelected',0);
