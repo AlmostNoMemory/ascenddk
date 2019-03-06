@@ -52,7 +52,7 @@ FFMPEG_CONFIGURE_PREFIX = " --prefix="
 
 FFMPEG_ENGINE_SETTING_LINK = ["-lavcodec \\","-lavformat \\","-lavdevice \\","-lavutil \\","-lswresample \\","-lavfilter \\","-lswscale \\"]
 
-FFMPEG_ENGINE_SETTING_INCLUDE = ["-I$(DDK_HOME)/include/third_party/ffmpeg \\"]
+FFMPEG_ENGINE_SETTING_INCLUDE = ["-I$(HOME)/ascend_ddk/include/third_party/ffmpeg \\"]
 
 CURRENT_PATH = os.path.dirname(
     os.path.realpath(__file__))
