@@ -53,6 +53,12 @@ const uint32_t kSizePerResultset = 7;
 const float kMinConfidence = 0.0f;
 const float kMaxConfidence = 1.0f;
 
+// dvpp minimal crop size
+const uint32_t kMinCropPixel = 16;
+
+// dvpp minimal yuv2jpg size
+const uint32_t kMinJpegPixel = 32;
+
 // valid bbox coordinate
 const float kLowerCoord = 0.0f;
 const float kUpperCoord = 1.0f;
@@ -139,10 +145,19 @@ HIAI_StatusT ObjectDetectionPostProcess::CropObjectFromImage(
   dvpp_crop_param.vert_max = bbox.rb_y % 2 == 0 ? bbox.rb_y - 1 : bbox.rb_y;
 
   // calculate cropped image width and height.
+  int dest_width = dvpp_crop_param.horz_max - dvpp_crop_param.horz_min + 1;
+  int dest_height = dvpp_crop_param.vert_max - dvpp_crop_param.vert_min + 1;
+
+  if (dest_width < kMinJpegPixel || dest_height < kMinJpegPixel) {
+    float short_side = dest_width < dest_height ? dest_width : dest_height;
+    dest_width = dest_width * (kMinJpegPixel / short_side);
+    dest_height = dest_height * (kMinJpegPixel / short_side);
+  }
+
   dvpp_crop_param.dest_resolution.width =
-      dvpp_crop_param.horz_max - dvpp_crop_param.horz_min + 1;
+      dest_width % 2 == 0 ? dest_width : dest_width + 1;
   dvpp_crop_param.dest_resolution.height =
-      dvpp_crop_param.vert_max - dvpp_crop_param.vert_min + 1;
+      dest_height % 2 == 0 ? dest_height : dest_height + 1;
   dvpp_crop_param.is_input_align = true;
 
   DvppProcess dvpp_process(dvpp_crop_param);
@@ -199,6 +214,9 @@ void ObjectDetectionPostProcess::FilterBoundingBox(
              rb_y = CorrectCoordinate(ptr[BBoxDataIndex::kLowerRightY]) *
                     base_height;
 
+    if (rb_x - lt_x < kMinCropPixel || rb_y - lt_x < kMinCropPixel) {
+      continue;
+    }
     // crop image
     ObjectImageParaT object_image;
     BoundingBox bbox = {lt_x, lt_y, rb_x, rb_y};
