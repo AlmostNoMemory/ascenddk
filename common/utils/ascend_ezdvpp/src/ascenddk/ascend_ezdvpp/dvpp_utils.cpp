@@ -135,6 +135,7 @@ int DvppUtils::AllocBuffer(const char * src_data, int input_size,
 
       // input data address 128 byte alignment
       *dest_data = (char *) memalign(kVpcAddressAlign, buffer_size);
+      CHECK_NEW_RESULT(dest_data);
 
       // alloc yuv420sp buffer
       ret = AllocYuv420SPBuffer(src_data, input_size, is_input_align, width,
@@ -151,6 +152,7 @@ int DvppUtils::AllocBuffer(const char * src_data, int input_size,
 
       // input data address 128 byte alignment
       *dest_data = (char *) memalign(kVpcAddressAlign, buffer_size);
+      CHECK_NEW_RESULT(dest_data);
 
       // alloc yuv422sp buffer
       ret = AllocYuv422SPBuffer(src_data, input_size, is_input_align, width,
@@ -173,6 +175,7 @@ int DvppUtils::AllocBuffer(const char * src_data, int input_size,
 
       // input data address 128 byte alignment
       *dest_data = (char *) memalign(kVpcAddressAlign, buffer_size);
+      CHECK_NEW_RESULT(dest_data);
 
       // alloc yuv444sp buffer
       ret = AllocYuv444SPBuffer(src_data, input_size, is_input_align, width,
@@ -192,6 +195,7 @@ int DvppUtils::AllocBuffer(const char * src_data, int input_size,
 
       // input data address 128 byte alignment
       *dest_data = (char *) memalign(kVpcAddressAlign, buffer_size);
+      CHECK_NEW_RESULT(dest_data);
 
       // alloc yuv422 packed buffer
       ret = AllocYuvOrRgbPackedBuffer(src_data, input_size, is_input_align,
@@ -211,6 +215,7 @@ int DvppUtils::AllocBuffer(const char * src_data, int input_size,
 
       // input data address 128 byte alignment
       *dest_data = (char *) memalign(kVpcAddressAlign, buffer_size);
+      CHECK_NEW_RESULT(dest_data);
 
       // alloc yuv444 packed buffer
       ret = AllocYuvOrRgbPackedBuffer(src_data, input_size, is_input_align,
@@ -230,6 +235,7 @@ int DvppUtils::AllocBuffer(const char * src_data, int input_size,
 
       // input data address 128 byte alignment
       *dest_data = (char *) memalign(kVpcAddressAlign, buffer_size);
+      CHECK_NEW_RESULT(dest_data);
 
       // alloc rgb888 packed buffer
       ret = AllocYuvOrRgbPackedBuffer(src_data, input_size, is_input_align,
@@ -250,6 +256,7 @@ int DvppUtils::AllocBuffer(const char * src_data, int input_size,
 
       // input data address 128 byte alignment
       *dest_data = (char *) memalign(kVpcAddressAlign, buffer_size);
+      CHECK_NEW_RESULT(dest_data);
 
       // alloc xrgb8888 packed buffer
       ret = AllocYuvOrRgbPackedBuffer(src_data, input_size, is_input_align,
@@ -268,6 +275,7 @@ int DvppUtils::AllocBuffer(const char * src_data, int input_size,
 
       // input data address 128 byte alignment
       *dest_data = (char *) memalign(kVpcAddressAlign, buffer_size);
+      CHECK_NEW_RESULT(dest_data);
 
       // alloc yuv400sp buffer
       ret = AllocYuv420SPBuffer(src_data, input_size, is_input_align, width,
