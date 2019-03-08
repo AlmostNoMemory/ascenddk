@@ -360,7 +360,7 @@ int DvppProcess::DvppYuvChangeToJpeg(const char *input_buf, int input_size,
       0, mmap_size, PROT_READ | PROT_WRITE,
       MAP_PRIVATE | MAP_ANONYMOUS | MAP_HUGETLB | API_MAP_VA32BIT,
       0, 0);
-  if (addr_orig == nullptr) {
+  if (addr_orig == MAP_FAILED) {
     ASC_LOG_ERROR("Failed to malloc memory in dvpp(yuv to jpeg).");
     return kDvppErrorMallocFail;
   }
@@ -400,7 +400,7 @@ int DvppProcess::DvppYuvChangeToJpeg(const char *input_buf, int input_size,
   ret = DvppProc(input_data, output_data);
 
   // release buffer
-  if (addr_orig != nullptr) {
+  if (addr_orig != MAP_FAILED) {
     munmap(
         addr_orig,
         (unsigned) (ALIGN_UP(input_data.bufSize + kJpegEAddressAlgin, MAP_2M)));
@@ -537,6 +537,7 @@ int DvppProcess::DvppBgrChangeToYuv(const char *input_buf, int input_size,
 
   // input data address 128 byte alignment
   char *in_buffer = (char *) memalign(kVpcAddressAlign, in_buffer_size);
+  CHECK_NEW_RESULT(in_buffer);
 
   // check image whether need to align
   int image_align = kImageNeedAlign;
@@ -874,7 +875,7 @@ int DvppProcess::DvppJpegChangeToYuv(const char *input_buf, int input_size,
       PROT_READ | PROT_WRITE,
       MAP_PRIVATE | MAP_ANONYMOUS | MAP_HUGETLB | API_MAP_VA32BIT, 0, 0);
 
-  if (addr_orig == nullptr) {
+  if (addr_orig == MAP_FAILED) {
     ASC_LOG_ERROR("Failed to malloc memory in dvpp(JpegD).");
     return kDvppErrorMallocFail;
   }
@@ -916,7 +917,7 @@ int DvppProcess::DvppJpegChangeToYuv(const char *input_buf, int input_size,
   }
 
 // release buffer
-  if (addr_orig != nullptr) {
+  if (addr_orig != MAP_FAILED) {
     munmap(
         addr_orig,
         (unsigned) (ALIGN_UP(jpegd_in_data.jpeg_data_size + kJpegDAddressAlgin,
